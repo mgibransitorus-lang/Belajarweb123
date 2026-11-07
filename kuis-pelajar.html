@@ -1,0 +1,1041 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Kuis Pelajar Juara</title>
+<style>
+:root{
+  --c1:#6366f1; --c2:#ec4899;
+  --bg:#0b1020; --card:rgba(255,255,255,.08); --line:rgba(255,255,255,.16);
+  --text:#f8fafc; --muted:#cbd5e1;
+  --good:#22c55e; --bad:#ef4444; --warn:#f59e0b;
+}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+html,body{height:100%}
+body{
+  font-family:'Segoe UI',system-ui,-apple-system,Roboto,Arial,sans-serif;
+  color:var(--text); background:var(--bg); overflow-x:hidden; min-height:100vh;
+}
+/* ====== Background animasi ====== */
+.bg{position:fixed;inset:0;z-index:-2;
+  background:linear-gradient(135deg,var(--c1),var(--bg) 45%,var(--c2));
+  background-size:300% 300%; animation:flow 14s ease infinite; transition:background .6s}
+@keyframes flow{0%{background-position:0% 50%}50%{background-position:100% 50%}100%{background-position:0% 50%}}
+.blob{position:fixed;border-radius:50%;filter:blur(70px);opacity:.35;z-index:-1;animation:float 16s ease-in-out infinite}
+.blob.b1{width:340px;height:340px;background:var(--c1);top:-80px;left:-80px}
+.blob.b2{width:400px;height:400px;background:var(--c2);bottom:-120px;right:-100px;animation-delay:-5s}
+.blob.b3{width:240px;height:240px;background:#22d3ee;top:40%;left:55%;animation-delay:-9s;opacity:.2}
+@keyframes float{0%,100%{transform:translate(0,0) scale(1)}50%{transform:translate(40px,-50px) scale(1.15)}}
+.stars{position:fixed;inset:0;z-index:-1;pointer-events:none}
+.stars i{position:absolute;width:3px;height:3px;background:#fff;border-radius:50%;opacity:.0;animation:twinkle 4s infinite}
+@keyframes twinkle{0%,100%{opacity:0;transform:scale(.5)}50%{opacity:.9;transform:scale(1.3)}}
+
+.wrap{max-width:980px;margin:0 auto;padding:18px 16px 40px}
+.screen{display:none;animation:pop .45s ease}
+.screen.active{display:block}
+@keyframes pop{from{opacity:0;transform:translateY(18px) scale(.98)}to{opacity:1;transform:none}}
+
+/* ====== Top bar ====== */
+.topbar{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:10px}
+.logo{font-weight:900;font-size:1.25rem;letter-spacing:.5px;
+  background:linear-gradient(90deg,#fde047,#fb7185,#a78bfa,#22d3ee);-webkit-background-clip:text;background-clip:text;color:transparent;
+  background-size:200% auto;animation:shine 5s linear infinite}
+@keyframes shine{to{background-position:200% center}}
+.iconbtns{display:flex;gap:8px}
+.ibtn{border:1px solid var(--line);background:var(--card);color:var(--text);width:42px;height:42px;border-radius:12px;font-size:1.15rem;
+  cursor:pointer;backdrop-filter:blur(8px);transition:.2s}
+.ibtn:hover{transform:translateY(-2px) scale(1.06);background:rgba(255,255,255,.18)}
+.ibtn.off{opacity:.45;filter:grayscale(1)}
+
+/* ====== Menu ====== */
+.hero{text-align:center;margin:14px 0 22px}
+.hero h1{font-size:clamp(1.7rem,5vw,2.6rem);font-weight:900;text-shadow:0 4px 24px rgba(0,0,0,.4)}
+.hero p{color:var(--muted);margin-top:8px;font-size:.98rem}
+.badges{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin-top:12px}
+.badge{padding:6px 12px;border-radius:999px;background:var(--card);border:1px solid var(--line);font-size:.82rem;backdrop-filter:blur(6px)}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:14px}
+.subj{position:relative;border:none;color:#fff;text-align:left;cursor:pointer;border-radius:20px;padding:18px 16px;overflow:hidden;
+  background:linear-gradient(135deg,var(--a),var(--b));box-shadow:0 10px 26px rgba(0,0,0,.35),inset 0 0 0 1px rgba(255,255,255,.25);
+  transition:transform .25s,box-shadow .25s;min-height:132px;font-family:inherit}
+.subj::after{content:"";position:absolute;inset:0;background:radial-gradient(circle at 85% 0%,rgba(255,255,255,.35),transparent 55%);pointer-events:none}
+.subj:hover{transform:translateY(-6px) rotate(-.6deg) scale(1.03);box-shadow:0 18px 34px rgba(0,0,0,.45),0 0 28px var(--a)}
+.subj:active{transform:scale(.97)}
+.subj .em{font-size:2.3rem;display:block;filter:drop-shadow(0 4px 6px rgba(0,0,0,.35));animation:bob 3s ease-in-out infinite}
+@keyframes bob{0%,100%{transform:translateY(0)}50%{transform:translateY(-5px)}}
+.subj .nm{font-weight:800;font-size:1.08rem;margin-top:6px;text-shadow:0 2px 6px rgba(0,0,0,.35)}
+.subj .st{font-size:.76rem;opacity:.95;margin-top:4px;display:flex;gap:8px;flex-wrap:wrap}
+.subj .st span{background:rgba(0,0,0,.25);padding:2px 8px;border-radius:999px}
+.footer-note{text-align:center;color:var(--muted);font-size:.78rem;margin-top:22px}
+
+/* ====== Quiz ====== */
+.qhead{display:flex;align-items:center;gap:10px;margin-bottom:12px;flex-wrap:wrap}
+.chip{padding:7px 14px;border-radius:999px;font-weight:700;font-size:.85rem;border:1px solid var(--line);background:var(--card);backdrop-filter:blur(8px)}
+.chip.subjchip{background:linear-gradient(90deg,var(--c1),var(--c2));border:none;box-shadow:0 4px 14px rgba(0,0,0,.3)}
+.spacer{flex:1}
+.btn-back{border:none;cursor:pointer;font-family:inherit;font-weight:800;font-size:.9rem;color:#fff;padding:9px 16px;border-radius:999px;
+  background:linear-gradient(135deg,#f43f5e,#f97316);box-shadow:0 6px 18px rgba(244,63,94,.45),inset 0 0 0 1px rgba(255,255,255,.3);transition:.2s}
+.btn-back:hover{transform:translateX(-4px) scale(1.04);filter:brightness(1.1)}
+.btn-back:active{transform:scale(.96)}
+.tally-ok{background:rgba(34,197,94,.28);border-color:rgba(134,239,172,.7);color:#dcfce7}
+.tally-no{background:rgba(239,68,68,.28);border-color:rgba(252,165,165,.7);color:#fee2e2}
+.chip.bump{animation:bump .5s}
+@keyframes bump{0%{transform:scale(1)}40%{transform:scale(1.25)}100%{transform:scale(1)}}
+.tally{margin-top:6px;font-size:1rem;font-weight:800;color:#fff}
+.progress{height:12px;border-radius:99px;background:rgba(255,255,255,.14);overflow:hidden;margin-bottom:16px;border:1px solid var(--line)}
+.progress>div{height:100%;width:0;border-radius:99px;background:linear-gradient(90deg,#22d3ee,#a78bfa,#f472b6,#fde047);background-size:200% 100%;
+  animation:shine 3s linear infinite;transition:width .5s cubic-bezier(.2,.9,.3,1.2)}
+.qcard{display:grid;grid-template-columns:auto 1fr;gap:18px;align-items:center;background:var(--card);border:1px solid var(--line);
+  border-radius:24px;padding:20px;backdrop-filter:blur(14px);box-shadow:0 14px 40px rgba(0,0,0,.35)}
+.timer{position:relative;width:98px;height:98px}
+.timer svg{transform:rotate(-90deg);width:100%;height:100%}
+.timer .bgc{stroke:rgba(255,255,255,.15);fill:none;stroke-width:9}
+.timer .fg{fill:none;stroke-width:9;stroke-linecap:round;stroke:var(--good);stroke-dasharray:276.46;stroke-dashoffset:0;transition:stroke .3s;filter:drop-shadow(0 0 6px currentColor)}
+.timer .num{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:2rem;font-weight:900}
+.timer.urgent{animation:throb .5s infinite}
+@keyframes throb{50%{transform:scale(1.1)}}
+.qtext{font-size:clamp(1.05rem,3.2vw,1.45rem);font-weight:700;line-height:1.45}
+.qno{font-size:.8rem;color:var(--muted);font-weight:600;margin-bottom:4px;letter-spacing:1px;text-transform:uppercase}
+.opts{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:16px}
+.opt{display:flex;align-items:center;gap:12px;text-align:left;border:none;color:#fff;cursor:pointer;font-family:inherit;
+  font-size:1rem;font-weight:600;padding:14px;border-radius:18px;background:linear-gradient(135deg,var(--oa),var(--ob));
+  box-shadow:0 8px 20px rgba(0,0,0,.3),inset 0 0 0 1px rgba(255,255,255,.25);transition:transform .18s,filter .18s,box-shadow .2s;animation:slideIn .45s both}
+.opt:nth-child(2){animation-delay:.06s}.opt:nth-child(3){animation-delay:.12s}.opt:nth-child(4){animation-delay:.18s}
+@keyframes slideIn{from{opacity:0;transform:translateX(-24px)}to{opacity:1;transform:none}}
+.opt .l{flex:none;width:36px;height:36px;border-radius:12px;background:rgba(0,0,0,.28);display:flex;align-items:center;justify-content:center;font-weight:900}
+.opt:hover:not(:disabled){transform:translateY(-3px) scale(1.02);filter:brightness(1.12)}
+.opt:disabled{cursor:default}
+.opt.o0{--oa:#3b82f6;--ob:#1d4ed8}.opt.o1{--oa:#ec4899;--ob:#be185d}.opt.o2{--oa:#f59e0b;--ob:#b45309}.opt.o3{--oa:#10b981;--ob:#047857}
+.opt.right{--oa:#22c55e;--ob:#15803d;animation:glow .7s ease 2;box-shadow:0 0 0 3px #bbf7d0,0 0 34px #22c55e}
+.opt.wrong{--oa:#ef4444;--ob:#991b1b;animation:shake .5s;box-shadow:0 0 0 3px #fecaca,0 0 26px #ef4444}
+.opt.dim{opacity:.4;filter:grayscale(.6)}
+@keyframes glow{50%{transform:scale(1.04)}}
+@keyframes shake{0%,100%{transform:translateX(0)}20%{transform:translateX(-10px)}40%{transform:translateX(10px)}60%{transform:translateX(-7px)}80%{transform:translateX(7px)}}
+.feedback{text-align:center;min-height:34px;margin-top:14px;font-weight:800;font-size:1.15rem}
+.feedback.ok{color:#86efac}.feedback.no{color:#fca5a5}
+.flash{position:fixed;inset:0;pointer-events:none;z-index:50;opacity:0}
+.flash.ok{background:radial-gradient(circle,rgba(34,197,94,.45),transparent 70%);animation:fl .6s}
+.flash.no{background:radial-gradient(circle,rgba(239,68,68,.5),transparent 70%);animation:fl .6s}
+@keyframes fl{0%{opacity:1}100%{opacity:0}}
+.combo{display:inline-block;animation:pop .3s}
+
+/* ====== Hasil ====== */
+.result{text-align:center;background:var(--card);border:1px solid var(--line);border-radius:28px;padding:28px 18px;backdrop-filter:blur(14px);box-shadow:0 14px 40px rgba(0,0,0,.4)}
+.trophy{font-size:4.5rem;animation:bob 2.2s ease-in-out infinite;filter:drop-shadow(0 8px 14px rgba(0,0,0,.4))}
+.result h2{font-size:1.9rem;margin:6px 0}
+.starsrow{font-size:2.2rem;letter-spacing:6px;margin:6px 0 14px}
+.rstats{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:12px;margin:18px 0}
+.rs{padding:14px;border-radius:16px;background:rgba(0,0,0,.25);border:1px solid var(--line)}
+.rs b{display:block;font-size:1.7rem}
+.rs small{color:var(--muted)}
+.lvl{display:inline-block;margin:8px 0 14px;padding:8px 16px;border-radius:999px;font-weight:800;background:linear-gradient(90deg,#f59e0b,#ef4444);box-shadow:0 0 24px rgba(245,158,11,.6);animation:glow 1s ease 3}
+.btn{border:none;cursor:pointer;font-family:inherit;font-weight:800;font-size:1rem;color:#fff;padding:14px 26px;border-radius:16px;margin:6px;
+  background:linear-gradient(135deg,var(--c1),var(--c2));box-shadow:0 10px 24px rgba(0,0,0,.35);transition:.2s}
+.btn:hover{transform:translateY(-3px) scale(1.04)}
+.btn.alt{background:rgba(255,255,255,.14);border:1px solid var(--line)}
+canvas#fx{position:fixed;inset:0;pointer-events:none;z-index:60}
+
+@media(max-width:640px){
+  .qcard{grid-template-columns:1fr;justify-items:center;text-align:center}
+  .opts{grid-template-columns:1fr}
+  .timer{width:84px;height:84px}
+}
+</style>
+</head>
+<body>
+<div class="bg" id="bg"></div>
+<div class="blob b1"></div><div class="blob b2"></div><div class="blob b3"></div>
+<div class="stars" id="stars"></div>
+<div class="flash" id="flash"></div>
+<canvas id="fx"></canvas>
+
+<div class="wrap">
+  <div class="topbar">
+    <div class="logo">🏆 KUIS PELAJAR JUARA</div>
+    <div class="iconbtns">
+      <button class="ibtn" id="btnMusic" title="Musik">🎵</button>
+      <button class="ibtn" id="btnSfx" title="Efek suara">🔊</button>
+    </div>
+  </div>
+
+  <!-- MENU -->
+  <section class="screen active" id="sMenu">
+    <div class="hero">
+      <h1>Pilih Mata Pelajaranmu!</h1>
+      <p>30 soal pilihan ganda &bull; 20 detik per soal &bull; Soal baru tiap main lagi</p>
+      <div class="badges">
+        <span class="badge">⏱️ 20 detik / soal</span>
+        <span class="badge">⚡ Jawab cepat = poin besar</span>
+        <span class="badge">🔥 Combo beruntun</span>
+        <span class="badge">🎁 Level naik tiap 35 jawaban benar</span>
+      </div>
+    </div>
+    <div class="grid" id="grid"></div>
+    <p class="footer-note">Tips: tekan tombol 1–4 atau A–D di keyboard untuk menjawab lebih cepat.</p>
+  </section>
+
+  <!-- QUIZ -->
+  <section class="screen" id="sQuiz">
+    <div class="qhead">
+      <button class="btn-back" id="btnBack" title="Kembali ke daftar 11 mata pelajaran">⬅️ Kembali ke Pelajaran</button>
+      <span class="chip subjchip" id="qSubj"></span>
+      <span class="spacer"></span>
+      <span class="chip" id="qScore">⭐ 0</span>
+      <span class="chip tally-ok" id="qRight">✅ Benar: 0</span>
+      <span class="chip tally-no" id="qWrong">❌ Salah: 0</span>
+      <span class="chip" id="qCombo">🔥 x0</span>
+    </div>
+    <div class="progress"><div id="bar"></div></div>
+    <div class="qcard">
+      <div class="timer" id="timer">
+        <svg viewBox="0 0 100 100"><circle class="bgc" cx="50" cy="50" r="44"/><circle class="fg" id="ring" cx="50" cy="50" r="44"/></svg>
+        <div class="num" id="tnum">20</div>
+      </div>
+      <div>
+        <div class="qno" id="qno">Soal 1 / 30</div>
+        <div class="qtext" id="qtext"></div>
+      </div>
+    </div>
+    <div class="opts" id="opts"></div>
+    <div class="feedback" id="fb"></div>
+  </section>
+
+  <!-- HASIL -->
+  <section class="screen" id="sResult">
+    <div class="result">
+      <div class="trophy" id="rTrophy">🏆</div>
+      <h2 id="rTitle">Hasil</h2>
+      <div class="starsrow" id="rStars"></div>
+      <div id="rLevel"></div>
+      <div class="rstats">
+        <div class="rs"><b id="rScore">0</b><small>Skor</small></div>
+        <div class="rs"><b id="rRight" style="color:#86efac">0</b><small>Benar</small></div>
+        <div class="rs"><b id="rWrong" style="color:#fca5a5">0</b><small>Salah</small></div>
+        <div class="rs"><b id="rTime" style="color:#fcd34d">0</b><small>Waktu habis</small></div>
+        <div class="rs"><b id="rBest" style="color:#93c5fd">0</b><small>Rekor</small></div>
+      </div>
+      <p id="rMsg" style="color:var(--muted);margin-bottom:10px"></p>
+      <button class="btn" id="btnAgain">🔄 Main Lagi (Soal Baru)</button>
+      <button class="btn alt" id="btnMenu">📚 Pilih Pelajaran</button>
+    </div>
+  </section>
+</div>
+
+<script>
+/* =========================================================
+   BANK SOAL  — format: [pertanyaan, JAWABAN BENAR, salah1, salah2, salah3]
+   (urutan pilihan diacak otomatis saat main)
+   Tambah soal baru? Cukup tambahkan baris baru di mapel yang diinginkan.
+   ========================================================= */
+const BANK = {
+pkn:[
+["Sila pertama Pancasila berbunyi...","Ketuhanan Yang Maha Esa","Kemanusiaan yang adil dan beradab","Persatuan Indonesia","Keadilan sosial bagi seluruh rakyat Indonesia"],
+["Lambang sila ketiga Pancasila adalah...","Pohon beringin","Rantai","Kepala banteng","Padi dan kapas"],
+["UUD 1945 disahkan pada tanggal...","18 Agustus 1945","17 Agustus 1945","1 Juni 1945","22 Juni 1945"],
+["Semboyan negara Indonesia adalah...","Bhinneka Tunggal Ika","Tut Wuri Handayani","Merdeka atau Mati","Garuda Pancasila"],
+["Tujuan negara Indonesia tercantum pada Pembukaan UUD 1945 alinea ke-...","4","1","2","3"],
+["Lembaga pemegang kekuasaan legislatif adalah...","DPR","Mahkamah Agung","Presiden","BPK"],
+["Lembaga yang memegang kekuasaan yudikatif adalah...","Mahkamah Agung","DPR","BPK","Presiden"],
+["Pemilu di Indonesia dilaksanakan setiap... tahun sekali.","5","4","3","6"],
+["Huruf 'L' pada asas pemilu LUBER berarti...","Langsung","Lokal","Lancar","Luas"],
+["Sesuatu yang wajib dilakukan warga negara disebut...","Kewajiban","Hak","Wewenang","Kebebasan"],
+["Sumpah Pemuda diikrarkan pada tanggal...","28 Oktober 1928","20 Mei 1908","17 Agustus 1945","1 Juni 1945"],
+["Hari lahir Pancasila diperingati setiap tanggal...","1 Juni","17 Agustus","18 Agustus","28 Oktober"],
+["Kebebasan memeluk agama dijamin dalam UUD 1945 Pasal...","29","27","30","33"],
+["Presiden Indonesia dipilih langsung oleh rakyat sejak tahun...","2004","1999","1945","2009"],
+["Bentuk negara Indonesia adalah...","Kesatuan","Federal","Serikat","Persemakmuran"],
+["Sistem pemerintahan Indonesia adalah...","Presidensial","Parlementer","Monarki absolut","Junta militer"],
+["Contoh sikap gotong royong adalah...","Kerja bakti membersihkan lingkungan","Mementingkan diri sendiri","Menyontek saat ujian","Membuang sampah sembarangan"],
+["Sila kelima Pancasila berbunyi...","Keadilan sosial bagi seluruh rakyat Indonesia","Persatuan Indonesia","Ketuhanan Yang Maha Esa","Kemanusiaan yang adil dan beradab"],
+["Lambang negara Indonesia adalah...","Garuda Pancasila","Burung Cendrawasih","Elang Jawa","Rajawali Merah"],
+["Jumlah bulu pada sayap burung Garuda Pancasila adalah...","17","8","45","19"],
+["Lembaga yang memeriksa pengelolaan keuangan negara adalah...","BPK","KPK","OJK","Bank Indonesia"],
+["Mahkamah Konstitusi berwenang untuk...","Menguji undang-undang terhadap UUD","Membuat undang-undang","Memilih presiden","Mengadili kasus pencurian"],
+["Toleransi adalah sikap...","Menghargai perbedaan","Memaksakan kehendak","Menolak perbedaan","Menjauhi orang yang berbeda"],
+["Musyawarah untuk mufakat diamalkan dalam sila ke-...","4","1","3","5"],
+["Hak warga negara mendapat pengajaran diatur dalam UUD 1945 Pasal...","31","30","33","34"],
+["Hak dan kewajiban bela negara diatur dalam UUD 1945 Pasal...","30","31","32","29"],
+["Kata 'Pancasila' berasal dari bahasa...","Sanskerta","Arab","Latin","Jawa Kuno"],
+["BPUPKI dibentuk pada masa pendudukan...","Jepang","Belanda","Inggris","Portugis"],
+["Panitia yang menyusun Piagam Jakarta disebut Panitia...","Sembilan","Delapan","Sepuluh","Lima"],
+["Pasal 1 ayat (3) UUD 1945 menyatakan Indonesia adalah negara...","Hukum","Kekuasaan","Agama","Militer"],
+["Hari Hak Asasi Manusia Sedunia diperingati tanggal...","10 Desember","10 November","22 Desember","1 Mei"],
+["Berikut yang termasuk kewajiban warga negara adalah...","Membayar pajak","Memperoleh pendidikan","Memeluk agama","Bebas berpendapat"],
+["Pemimpin pemerintahan tingkat provinsi disebut...","Gubernur","Bupati","Wali kota","Camat"],
+["Pemimpin pemerintahan tingkat desa disebut...","Kepala desa","Camat","Bupati","Gubernur"],
+["Lambang sila kedua Pancasila adalah...","Rantai","Bintang","Pohon beringin","Kepala banteng"],
+["Warna merah pada bendera Merah Putih melambangkan...","Keberanian","Kesucian","Kekayaan","Kedamaian"],
+["Pencipta lagu Indonesia Raya adalah...","W.R. Supratman","Ismail Marzuki","Ibu Sud","C. Simanjuntak"],
+["Lambang sila keempat Pancasila adalah...","Kepala banteng","Pohon beringin","Rantai","Bintang"],
+["Pancasila sebagai dasar negara tercantum dalam...","Pembukaan UUD 1945","Pasal 1 UUD 1945","Penjelasan KUHP","GBHN"],
+["Cara menyelesaikan perbedaan pendapat yang paling baik adalah...","Musyawarah","Berkelahi","Mengancam","Mengabaikan"]
+],
+sejarah:[
+["Proklamasi kemerdekaan Indonesia dibacakan pada tanggal...","17 Agustus 1945","18 Agustus 1945","1 Juni 1945","28 Oktober 1928"],
+["Teks proklamasi diketik oleh...","Sayuti Melik","Fatmawati","Ahmad Subardjo","Sukarni"],
+["Bendera Merah Putih saat proklamasi dijahit oleh...","Fatmawati","Cut Nyak Dhien","R.A. Kartini","Dewi Sartika"],
+["Kerajaan Hindu tertua di Indonesia adalah...","Kutai","Majapahit","Sriwijaya","Mataram Kuno"],
+["Raja terkenal dari Kerajaan Kutai adalah...","Mulawarman","Hayam Wuruk","Balaputradewa","Airlangga"],
+["Pusat Kerajaan Sriwijaya berada di dekat kota...","Palembang","Yogyakarta","Banten","Makassar"],
+["Mahapatih Majapahit yang terkenal dengan Sumpah Palapa adalah...","Gajah Mada","Mpu Prapanca","Ken Arok","Jayabaya"],
+["Candi Borobudur dibangun oleh Dinasti...","Syailendra","Sanjaya","Isyana","Warmadewa"],
+["Bangsa Eropa pertama yang menguasai Malaka (1511) adalah...","Portugis","Belanda","Inggris","Spanyol"],
+["VOC didirikan pada tahun...","1602","1511","1799","1830"],
+["Sistem Tanam Paksa (Cultuurstelsel) dicetuskan oleh...","Johannes van den Bosch","Daendels","Raffles","Cornelis de Houtman"],
+["Perang Diponegoro terjadi pada tahun...","1825–1830","1811–1815","1945–1949","1908–1912"],
+["Pahlawan pemimpin Perang Padri adalah...","Tuanku Imam Bonjol","Pangeran Antasari","Pattimura","Sultan Hasanuddin"],
+["Pangeran Antasari berjuang melawan Belanda di...","Kalimantan Selatan","Aceh","Maluku","Sulawesi Selatan"],
+["Hari Kebangkitan Nasional diperingati setiap tanggal...","20 Mei","2 Mei","28 Oktober","10 November"],
+["Organisasi Budi Utomo didirikan pada tahun...","1908","1928","1912","1945"],
+["Tiga Serangkai pendiri Indische Partij adalah Douwes Dekker, Cipto Mangunkusumo, dan...","Ki Hajar Dewantara","H.O.S. Cokroaminoto","Soetomo","Mohammad Hatta"],
+["Indonesia dijajah Jepang pada tahun...","1942–1945","1602–1799","1945–1949","1908–1928"],
+["Jepang menyerah kepada Sekutu setelah dijatuhkannya bom atom di...","Hiroshima dan Nagasaki","Tokyo dan Osaka","Kyoto dan Nara","Okinawa dan Sapporo"],
+["Peristiwa Rengasdengklok terjadi karena golongan muda...","Membawa Soekarno-Hatta ke Rengasdengklok","Menyerang tentara Jepang","Menyusun UUD","Membentuk PPKI"],
+["Hari Pahlawan diperingati untuk mengenang pertempuran di...","Surabaya","Bandung","Semarang","Ambarawa"],
+["Hari Pahlawan jatuh pada tanggal...","10 November","10 Desember","17 Agustus","20 Mei"],
+["Peristiwa 'Bandung Lautan Api' terjadi pada tahun...","1946","1945","1948","1950"],
+["Belanda mengakui kedaulatan Indonesia pada hasil...","Konferensi Meja Bundar","Perjanjian Renville","Perjanjian Roem-Royen","Perjanjian Giyanti"],
+["Konferensi Asia Afrika 1955 diselenggarakan di...","Bandung","Jakarta","Yogyakarta","Surabaya"],
+["Presiden Indonesia yang pertama adalah...","Soekarno","Soeharto","B.J. Habibie","Abdurrahman Wahid"],
+["Presiden Indonesia ketiga adalah...","B.J. Habibie","Soeharto","Megawati Soekarnoputri","Abdurrahman Wahid"],
+["Dekret Presiden dikeluarkan pada tanggal...","5 Juli 1959","11 Maret 1966","17 Agustus 1945","21 Mei 1998"],
+["Surat Perintah 11 Maret dikenal dengan singkatan...","Supersemar","Supertama","Superman","Sumpah"],
+["Presiden Soeharto mengundurkan diri pada tanggal...","21 Mei 1998","11 Maret 1966","1 Oktober 1965","5 Juli 1959"],
+["Bapak Pendidikan Nasional Indonesia adalah...","Ki Hajar Dewantara","R.A. Kartini","Soekarno","Mohammad Hatta"],
+["Pahlawan emansipasi wanita dari Jepara adalah...","R.A. Kartini","Dewi Sartika","Cut Nyak Dhien","Martha Christina Tiahahu"],
+["Pahlawan wanita dari Aceh adalah...","Cut Nyak Dhien","R.A. Kartini","Dewi Sartika","Fatmawati"],
+["Pattimura berasal dari daerah...","Maluku","Aceh","Bali","Banten"],
+["Sultan Hasanuddin dijuluki 'Ayam Jantan dari...'","Timur","Barat","Utara","Selatan"],
+["Kerajaan Islam pertama di Indonesia adalah...","Samudera Pasai","Demak","Mataram Islam","Banten"],
+["Raja pertama Kerajaan Demak adalah...","Raden Patah","Sultan Agung","Sunan Giri","Fatahillah"],
+["Penyebar Islam di Pulau Jawa dikenal dengan sebutan...","Walisongo","Wali Pitu","Wali Lima","Wali Sembilan Belas"],
+["Perjanjian Giyanti (1755) membagi Kerajaan...","Mataram","Majapahit","Sriwijaya","Demak"],
+["Organisasi Sarekat Islam dipimpin oleh...","H.O.S. Cokroaminoto","Dr. Soetomo","Ki Hajar Dewantara","Douwes Dekker"]
+],
+bindo:[
+["Sinonim kata 'cantik' adalah...","Elok","Buruk","Jelek","Lusuh"],
+["Antonim kata 'rajin' adalah...","Malas","Tekun","Giat","Ulet"],
+["Kata baku yang benar adalah...","Apotek","Apotik","Apotheek","Apoteck"],
+["Kata baku yang benar adalah...","Analisis","Analisa","Analysis","Analisys"],
+["Kata baku yang benar adalah...","Risiko","Resiko","Risco","Resico"],
+["Majas yang membandingkan dengan kata 'seperti' atau 'bagai' adalah...","Simile","Metafora","Hiperbola","Ironi"],
+["'Angin berbisik di telingaku' termasuk majas...","Personifikasi","Hiperbola","Metonimia","Litotes"],
+["'Aku sudah menunggumu seribu tahun' termasuk majas...","Hiperbola","Personifikasi","Simile","Ironi"],
+["Tanda baca di akhir kalimat tanya adalah...","Tanda tanya (?)","Tanda titik (.)","Tanda seru (!)","Tanda koma (,)"],
+["Penulisan kata depan 'di' yang tepat terdapat pada kalimat...","Adik duduk di kursi.","Adik duduk dikursi.","Buku itu di baca Ani.","Pintu itu di buka Ibu."],
+["Bagian kalimat yang menyatakan pelaku disebut...","Subjek","Predikat","Objek","Keterangan"],
+["Pantun terdiri atas... baris dalam satu bait.","4","2","6","8"],
+["Dua baris pertama pada pantun disebut...","Sampiran","Isi","Tema","Amanat"],
+["Penulis puisi terkenal 'Aku' adalah...","Chairil Anwar","W.S. Rendra","Sapardi Djoko Damono","Taufiq Ismail"],
+["Novel 'Laskar Pelangi' ditulis oleh...","Andrea Hirata","Tere Liye","Habiburrahman El Shirazy","Pramoedya Ananta Toer"],
+["Novel 'Siti Nurbaya' dikarang oleh...","Marah Rusli","Hamka","Armijn Pane","Abdul Muis"],
+["Teks yang berisi langkah-langkah melakukan sesuatu disebut teks...","Prosedur","Narasi","Deskripsi","Eksposisi"],
+["Teks yang menceritakan rangkaian peristiwa disebut teks...","Narasi","Prosedur","Persuasi","Laporan"],
+["Unsur 'Why' dalam 5W+1H berarti...","Mengapa","Siapa","Di mana","Kapan"],
+["Unsur 'Who' dalam 5W+1H menanyakan...","Siapa","Apa","Kapan","Bagaimana"],
+["Kata dasar 'tulis' diberi awalan me- menjadi...","Menulis","Mentulis","Menullis","Memtulis"],
+["Kata 'sayur-mayur' termasuk kata ulang yang...","Berubah bunyi","Utuh","Berimbuhan","Semu"],
+["Peribahasa 'air beriak tanda tak dalam' bermakna...","Orang yang banyak bicara biasanya kurang berilmu","Orang pandai selalu diam","Air sungai dangkal","Orang yang kaya raya"],
+["'Panjang tangan' berarti...","Suka mencuri","Rajin bekerja","Dermawan","Pemarah"],
+["'Besar kepala' berarti...","Sombong","Pintar","Sakit kepala","Rendah hati"],
+["Peribahasa 'sekali mendayung, dua tiga pulau terlampaui' bermakna...","Sekali bekerja, beberapa tujuan tercapai","Mendayung perahu itu sulit","Pulau itu sangat dekat","Bekerja harus sabar"],
+["Antonim kata 'luas' adalah...","Sempit","Lebar","Besar","Panjang"],
+["Sinonim kata 'pandai' adalah...","Pintar","Bodoh","Malas","Lamban"],
+["Penggunaan huruf kapital yang benar terdapat pada kalimat...","Kami berlibur ke Bali.","kami berlibur ke bali.","Kami berlibur Ke Bali.","kami Berlibur ke Bali."],
+["Kata hubung yang menyatakan penjumlahan adalah...","Dan","Tetapi","Karena","Jika"],
+["Kata hubung yang menyatakan sebab adalah...","Karena","Tetapi","Sehingga","Agar"],
+["Kata hubung yang menyatakan pertentangan adalah...","Tetapi","Dan","Karena","Serta"],
+["Tanda baca yang digunakan pada kalimat perintah/seruan adalah...","Tanda seru (!)","Tanda tanya (?)","Titik dua (:)","Titik koma (;)"],
+["Ide pokok paragraf disebut juga...","Gagasan utama","Kalimat penjelas","Penutup","Judul"],
+["Ciri kalimat efektif adalah...","Singkat, jelas, dan tidak bertele-tele","Panjang dan berputar-putar","Memakai banyak kata asing","Tidak memiliki subjek"],
+["Tokoh utama dalam cerita fabel adalah...","Hewan","Dewa","Raja","Robot"],
+["Cerita Malin Kundang berasal dari daerah...","Sumatera Barat","Jawa Barat","Sulawesi Selatan","Bali"],
+["Kata tanya untuk menanyakan alasan adalah...","Mengapa","Siapa","Kapan","Berapa"],
+["Bahasa Indonesia berasal dari bahasa...","Melayu","Jawa","Sunda","Sanskerta"],
+["Bahasa Indonesia diikrarkan sebagai bahasa persatuan pada...","Sumpah Pemuda","Proklamasi","Reformasi","Konferensi Asia Afrika"],
+["Kata 'mondar-mandir' termasuk kata ulang...","Berubah bunyi","Utuh","Berimbuhan","Semu"]
+],
+bing:[
+["I ___ a student.","am","is","are","be"],
+["She ___ to school every day.","goes","go","going","gone"],
+["The past form of 'go' is...","went","goed","gone","going"],
+["The plural of 'child' is...","children","childs","childes","childrens"],
+["The opposite of 'hot' is...","cold","warm","cool","fire"],
+["They ___ playing football now.","are","is","am","was"],
+["'Library' in Indonesian means...","Perpustakaan","Laboratorium","Kantin","Lapangan"],
+["The English word for 'kucing' is...","cat","dog","rat","bird"],
+["He ___ a new bike yesterday.","bought","buy","buys","buying"],
+["The past participle of 'eat' is...","eaten","ate","eating","eats"],
+["I have ___ my homework.","finished","finish","finishing","finishes"],
+["She is ___ honest girl.","an","a","the","two"],
+["___ you like tea?","Do","Does","Is","Are"],
+["I was born ___ 2010.","in","on","at","by"],
+["My birthday is ___ May 5th.","on","in","at","for"],
+["We meet ___ 7 o'clock.","at","in","on","by"],
+["The opposite of 'big' is...","small","tall","long","wide"],
+["Your mother's brother is your...","uncle","aunt","cousin","grandfather"],
+["The comparative form of 'good' is...","better","gooder","best","more good"],
+["The superlative form of 'big' is...","biggest","bigger","most big","bigest"],
+["After Monday comes...","Tuesday","Sunday","Wednesday","Friday"],
+["There are ___ days in a week.","seven","five","six","eight"],
+["Tina is my friend. ___ is very kind.","She","He","It","They"],
+["This is Tom's book. It is ___ book.","his","her","their","its"],
+["Which one is the number 40?","forty","fourteen","fourty","four"],
+["The past form of 'write' is...","wrote","writed","written","writing"],
+["If it rains, I ___ stay at home.","will","would have","am","was"],
+["She can ___ very well.","sing","sings","sang","singing"],
+["A synonym of 'happy' is...","glad","sad","angry","tired"],
+["The cake ___ by my mother.","was made","made","is make","were made"],
+["'Where do you live?' — The best answer is...","I live in Jakarta.","I am fine.","It is Monday.","Yes, I do."],
+["A doctor works in a...","hospital","school","bank","market"],
+["We use ___ to cut paper.","scissors","a spoon","a pillow","a ruler"],
+["Blue + yellow = ...","green","orange","purple","brown"],
+["The opposite of 'always' is...","never","often","usually","sometimes"],
+["There ___ two books on the table.","are","is","am","be"],
+["I ___ breakfast at 6 every morning.","have","has","having","am have"],
+["The question word for place is...","Where","Who","When","Why"],
+["The plural of 'man' is...","men","mans","mens","manies"],
+["What do you say to greet someone in the morning?","Good morning","Good night","Good evening","Good afternoon"],
+["'Beautiful' is an example of an...","adjective","verb","noun","adverb"]
+],
+islam:[
+["Rukun Islam ada berapa?","5","4","6","7"],
+["Rukun Iman ada berapa?","6","5","4","7"],
+["Rukun Islam yang pertama adalah...","Syahadat","Salat","Puasa","Zakat"],
+["Kitab suci umat Islam adalah...","Al-Qur'an","Zabur","Taurat","Injil"],
+["Jumlah surah dalam Al-Qur'an adalah...","114","110","30","99"],
+["Surah pertama dalam Al-Qur'an adalah...","Al-Fatihah","Al-Baqarah","Al-Ikhlas","An-Nas"],
+["Surah terpendek dalam Al-Qur'an adalah...","Al-Kautsar","Al-Fatihah","Al-Ikhlas","Al-Falaq"],
+["Nabi terakhir adalah...","Muhammad SAW","Isa AS","Musa AS","Ibrahim AS"],
+["Wahyu pertama yang turun adalah surah...","Al-'Alaq","Al-Fatihah","Al-Muddatstsir","Al-Ikhlas"],
+["Malaikat penyampai wahyu adalah...","Jibril","Mikail","Israfil","Izrail"],
+["Malaikat pencabut nyawa adalah...","Izrail","Jibril","Mikail","Malik"],
+["Malaikat pembagi rezeki adalah...","Mikail","Jibril","Israfil","Ridwan"],
+["Malaikat peniup sangkakala adalah...","Israfil","Jibril","Mikail","Izrail"],
+["Jumlah rakaat salat Subuh adalah...","2","3","4","5"],
+["Jumlah rakaat salat Maghrib adalah...","3","2","4","5"],
+["Jumlah rakaat salat Isya adalah...","4","2","3","5"],
+["Puasa wajib dilaksanakan pada bulan...","Ramadan","Syawal","Muharram","Rajab"],
+["Ramadan adalah bulan ke-... dalam kalender Hijriah.","9","8","10","12"],
+["Haji dilaksanakan di kota...","Mekah","Madinah","Kairo","Yerusalem"],
+["Hari Raya Idul Fitri jatuh pada tanggal...","1 Syawal","10 Dzulhijjah","1 Muharram","12 Rabiul Awal"],
+["Hari Raya Idul Adha jatuh pada tanggal...","10 Dzulhijjah","1 Syawal","1 Ramadan","27 Rajab"],
+["Kisah penyembelihan hewan kurban berkaitan dengan Nabi...","Ibrahim AS","Nuh AS","Yusuf AS","Yunus AS"],
+["Nabi yang menerima kitab Taurat adalah...","Musa AS","Daud AS","Isa AS","Muhammad SAW"],
+["Nabi yang menerima kitab Zabur adalah...","Daud AS","Musa AS","Isa AS","Sulaiman AS"],
+["Nabi yang menerima kitab Injil adalah...","Isa AS","Musa AS","Daud AS","Yahya AS"],
+["Nabi yang membuat kapal besar saat banjir bandang adalah...","Nuh AS","Ibrahim AS","Ismail AS","Idris AS"],
+["Nabi yang pernah ditelan ikan paus adalah...","Yunus AS","Yusuf AS","Ayub AS","Zakaria AS"],
+["Hukum bacaan nun sukun bertemu huruf ba adalah...","Iqlab","Idzhar","Idgham","Ikhfa"],
+["Rukun wudu yang pertama adalah...","Niat","Mengusap kepala","Membasuh kaki","Berkumur"],
+["Arah kiblat umat Islam adalah...","Ka'bah","Masjid Nabawi","Masjidil Aqsa","Gunung Uhud"],
+["Muazin pertama dalam Islam adalah...","Bilal bin Rabah","Abu Bakar","Umar bin Khattab","Ali bin Abi Thalib"],
+["Khalifah pertama Khulafaur Rasyidin adalah...","Abu Bakar Ash-Shiddiq","Umar bin Khattab","Utsman bin Affan","Ali bin Abi Thalib"],
+["Khalifah yang membukukan Al-Qur'an dalam satu mushaf adalah...","Utsman bin Affan","Umar bin Khattab","Ali bin Abi Thalib","Abu Bakar"],
+["Hijrah Nabi Muhammad SAW dilakukan dari Mekah ke...","Madinah","Thaif","Habasyah","Yaman"],
+["Bulan pertama dalam kalender Hijriah adalah...","Muharram","Ramadan","Syawal","Rajab"],
+["Sifat wajib Rasul yang berarti 'jujur/benar' adalah...","Siddiq","Amanah","Tabligh","Fathanah"],
+["Sifat wajib Rasul yang berarti 'menyampaikan' adalah...","Tabligh","Siddiq","Amanah","Fathanah"],
+["Istri pertama Nabi Muhammad SAW adalah...","Khadijah","Aisyah","Hafshah","Fatimah"],
+["Asmaul Husna 'Ar-Rahman' berarti...","Maha Pengasih","Maha Mengetahui","Maha Melihat","Maha Kuasa"],
+["Peristiwa Isra Miraj berkaitan dengan perintah...","Salat lima waktu","Puasa Ramadan","Zakat","Haji"],
+["Malam yang lebih baik dari seribu bulan adalah...","Lailatul Qadar","Malam Jumat","Malam Nisfu Syaban","Malam Tahun Baru"]
+],
+kristen:[
+["Kitab suci umat Kristen adalah...","Alkitab","Al-Qur'an","Weda","Tripitaka"],
+["Alkitab terdiri atas dua bagian, yaitu...","Perjanjian Lama dan Perjanjian Baru","Taurat dan Zabur","Injil dan Weda","Kejadian dan Wahyu"],
+["Jumlah seluruh kitab dalam Alkitab adalah...","66","39","27","72"],
+["Jumlah kitab dalam Perjanjian Baru adalah...","27","39","66","12"],
+["Kitab pertama dalam Alkitab adalah...","Kejadian","Keluaran","Matius","Mazmur"],
+["Kitab terakhir dalam Alkitab adalah...","Wahyu","Yudas","Maleakhi","Yohanes"],
+["Allah menciptakan dunia dalam... hari.","6","7","3","10"],
+["Manusia pertama yang diciptakan Allah adalah...","Adam dan Hawa","Kain dan Habel","Nuh dan Sem","Abraham dan Sara"],
+["Kain membunuh adiknya yang bernama...","Habel","Set","Henokh","Lamekh"],
+["Tokoh yang membuat bahtera menjelang air bah adalah...","Nuh","Abraham","Musa","Yosua"],
+["Bapa orang beriman adalah...","Abraham","Musa","Daud","Elia"],
+["Sepuluh Hukum diterima Musa di gunung...","Sinai","Karmel","Zaitun","Nebo"],
+["Daud mengalahkan raksasa bernama...","Goliat","Simson","Saul","Absalom"],
+["Raja yang terkenal dengan hikmatnya adalah...","Salomo","Saul","Daud","Hizkia"],
+["Daniel dilemparkan ke dalam...","Gua singa","Perapian menyala","Sumur kering","Penjara bawah tanah"],
+["Nabi yang ditelan ikan besar adalah...","Yunus","Yeremia","Yesaya","Elia"],
+["Yesus Kristus dilahirkan di kota...","Betlehem","Nazaret","Yerusalem","Kapernaum"],
+["Ibu Yesus bernama...","Maria","Marta","Elisabet","Hana"],
+["Hari Natal diperingati setiap tanggal...","25 Desember","1 Januari","6 Januari","24 Desember"],
+["Hari kebangkitan Yesus diperingati sebagai hari...","Paskah","Natal","Pentakosta","Jumat Agung"],
+["Hari wafatnya Yesus di kayu salib diperingati sebagai...","Jumat Agung","Paskah","Natal","Kenaikan"],
+["Jumlah murid Yesus adalah...","12","7","10","70"],
+["Murid yang mengkhianati Yesus adalah...","Yudas Iskariot","Petrus","Yohanes","Tomas"],
+["Murid Yesus yang menyangkal-Nya tiga kali adalah...","Petrus","Andreas","Matius","Filipus"],
+["Doa yang diajarkan Yesus kepada murid-murid-Nya adalah...","Doa Bapa Kami","Doa Syukur","Doa Pengakuan","Doa Berkat"],
+["Turunnya Roh Kudus dirayakan pada hari...","Pentakosta","Paskah","Natal","Epifani"],
+["Penulis Injil yang berprofesi sebagai tabib adalah...","Lukas","Matius","Markus","Yohanes"],
+["Buah Roh yang disebutkan pertama dalam Galatia 5 adalah...","Kasih","Sukacita","Damai sejahtera","Kesabaran"],
+["Hukum Kasih mengajarkan kita mengasihi Tuhan dan...","Sesama manusia","Harta benda","Diri sendiri saja","Para pemimpin"],
+["Perumpamaan tentang orang yang menolong korban perampokan adalah...","Orang Samaria yang murah hati","Anak yang hilang","Penabur","Biji sesawi"],
+["Anak yang meninggalkan rumah lalu kembali kepada ayahnya disebut...","Anak yang hilang","Anak sulung","Anak Samaria","Anak bungsu Yakub"],
+["Nama Paulus sebelum bertobat adalah...","Saulus","Simon","Barnabas","Silas"],
+["Mukjizat pertama Yesus adalah mengubah air menjadi anggur di...","Kana","Betania","Kapernaum","Yeriko"],
+["Yesus memberi makan 5.000 orang dengan... roti dan 2 ikan.","5","7","12","3"],
+["Yesus dibaptis oleh...","Yohanes Pembaptis","Petrus","Paulus","Andreas"],
+["Yesus dibaptis di sungai...","Yordan","Nil","Efrat","Tigris"],
+["Mazmur 23 dimulai dengan 'Tuhan adalah...'","Gembalaku","Terangku","Kekuatanku","Bentengku"],
+["Permulaan hikmat menurut Amsal adalah...","Takut akan Tuhan","Kekayaan","Kekuasaan","Pengetahuan dunia"],
+["Dua sakramen dalam gereja Protestan adalah...","Baptisan dan Perjamuan Kudus","Baptisan dan Pernikahan","Perjamuan dan Pengakuan","Penahbisan dan Pengurapan"],
+["Yusuf dijual oleh saudara-saudaranya dan dibawa ke...","Mesir","Babel","Kanaan","Sodom"]
+],
+pjok:[
+["Jumlah pemain sepak bola dalam satu tim di lapangan adalah...","11","9","7","12"],
+["Jumlah pemain bola basket dalam satu tim di lapangan adalah...","5","6","7","11"],
+["Jumlah pemain bola voli dalam satu tim di lapangan adalah...","6","5","7","9"],
+["Alat yang digunakan untuk memukul kok pada bulu tangkis adalah...","Raket","Pemukul","Stik","Bet kayu"],
+["Satu set bulu tangkis dimenangkan jika mencapai poin...","21","11","15","25"],
+["Lari jarak pendek disebut juga...","Sprint","Maraton","Estafet","Lari rintangan"],
+["Tolak peluru, lempar cakram, dan lempar lembing termasuk nomor...","Lempar","Lari","Lompat","Jalan cepat"],
+["Pada lompat jauh, atlet bertumpu pada...","Papan tumpu","Matras","Palang","Bak pasir"],
+["Gerakan guling ke depan banyak dilakukan pada senam...","Lantai","Irama","Aerobik","Ritmik"],
+["Gaya renang yang tangannya bergerak bergantian dan kaki naik-turun disebut gaya...","Bebas","Dada","Kupu-kupu","Punggung"],
+["Tujuan utama pemanasan sebelum olahraga adalah...","Mencegah cedera","Menambah lemak","Membuat mengantuk","Menghabiskan tenaga"],
+["Denyut nadi normal orang dewasa saat istirahat adalah...","60–100 kali/menit","20–30 kali/menit","120–150 kali/menit","200 kali/menit"],
+["Zat gizi utama penghasil energi adalah...","Karbohidrat","Air","Vitamin","Garam"],
+["Fungsi utama protein bagi tubuh adalah...","Pertumbuhan dan perbaikan sel","Melarutkan lemak","Membuat tulang rapuh","Sumber air"],
+["P3K merupakan singkatan dari...","Pertolongan Pertama Pada Kecelakaan","Persiapan Tiga Kali Kerja","Pertolongan Pasien Tak Kunjung","Pengobatan Pertama Penyakit Kronis"],
+["Pada prinsip RICE, huruf 'I' berarti...","Ice (kompres es)","Injection","Immobile","Insulin"],
+["Pencak silat adalah seni bela diri asli dari...","Indonesia","Jepang","Korea","Tiongkok"],
+["Panjang lapangan bola voli adalah...","18 meter","20 meter","15 meter","25 meter"],
+["Dalam tenis meja, satu set dimenangkan jika mencapai poin...","11","21","15","7"],
+["Teknik passing bawah bola voli menggunakan...","Kedua lengan bawah","Satu telapak tangan","Kepala","Siku"],
+["Memantulkan bola ke lantai pada bola basket disebut...","Dribble","Shooting","Rebound","Block"],
+["Lari estafet jarak pendek biasanya terdiri atas... pelari.","4","2","3","6"],
+["Benda yang diserahkan antar pelari estafet disebut...","Tongkat (baton)","Bola","Pita","Kartu"],
+["Waktu tidur ideal untuk remaja adalah...","8–10 jam","3–4 jam","5 jam","12–14 jam"],
+["Tes 'sit and reach' digunakan untuk mengukur...","Kelentukan","Kecepatan","Daya tahan","Kekuatan lengan"],
+["Push-up digunakan untuk mengukur kekuatan otot...","Lengan dan dada","Perut saja","Kaki","Punggung bawah"],
+["Zat berbahaya dalam rokok yang menyebabkan kecanduan adalah...","Nikotin","Kalsium","Vitamin","Glukosa"],
+["Jumlah pemain dalam satu tim permainan kasti adalah...","12","11","9","6"],
+["Satu regu sepak takraw terdiri atas... pemain.","3","5","6","11"],
+["Benda yang dipukul pada bulu tangkis disebut...","Shuttlecock","Bola","Kasti","Puck"],
+["Kartu merah dalam sepak bola berarti pemain...","Dikeluarkan dari lapangan","Diberi peringatan","Mendapat penalti","Boleh bermain lagi"],
+["Induk organisasi sepak bola dunia adalah...","FIFA","FIBA","FIVB","IOC"],
+["Pemain bola voli yang bertugas mengumpan bola kepada smasher disebut...","Tosser (setter)","Libero","Server","Blocker"],
+["Teknik lompat tinggi yang populer saat ini adalah gaya...","Fosbury Flop","Gunting","Straddle","Guling perut"],
+["Olimpiade modern diselenggarakan setiap... tahun sekali.","4","2","5","3"],
+["Kegiatan mendinginkan tubuh setelah olahraga disebut...","Pendinginan","Pemanasan","Latihan inti","Sprint"],
+["Makanan sehat seimbang disebut empat sehat lima...","Sempurna","Sedikit","Cepat","Manis"],
+["Senam yang diiringi musik dan gerakan berirama disebut senam...","Irama","Lantai","Alat","Ketangkasan"],
+["Cabang olahraga renang dilaksanakan di...","Kolam renang","Lapangan","Gedung olahraga","Arena balap"],
+["Bola yang keluar lapangan pada sepak bola dimasukkan kembali dengan...","Lemparan ke dalam","Tendangan penalti","Tendangan gawang","Sepak pojok"]
+],
+informatika:[
+["CPU adalah singkatan dari...","Central Processing Unit","Computer Personal Unit","Central Printing Utility","Control Power Unit"],
+["Perangkat input pada komputer adalah...","Keyboard","Monitor","Speaker","Printer"],
+["Perangkat output pada komputer adalah...","Monitor","Mouse","Scanner","Keyboard"],
+["RAM berfungsi sebagai...","Memori sementara","Penyimpan permanen","Pendingin komputer","Penguat sinyal"],
+["HTML adalah singkatan dari...","HyperText Markup Language","High Text Machine Language","Hyper Transfer Mark Language","Home Tool Markup Language"],
+["Contoh browser (peramban web) adalah...","Google Chrome","Microsoft Word","Photoshop","WhatsApp"],
+["WWW adalah singkatan dari...","World Wide Web","World Web Window","Wide World Web","Web World Wire"],
+["Contoh sistem operasi adalah...","Windows","Excel","Chrome","Canva"],
+["Sistem bilangan biner hanya menggunakan angka...","0 dan 1","1 sampai 5","0 sampai 9","A sampai F"],
+["1 byte sama dengan... bit.","8","4","16","1024"],
+["1 kilobyte (KB) sama dengan... byte.","1024","1000000","100","512"],
+["Langkah-langkah logis dan sistematis untuk menyelesaikan masalah disebut...","Algoritma","Program","Variabel","Kompilator"],
+["Simbol belah ketupat pada diagram alir (flowchart) menyatakan...","Keputusan","Proses","Mulai/Selesai","Masukan data"],
+["Python adalah contoh...","Bahasa pemrograman","Sistem operasi","Perangkat keras","Antivirus"],
+["Tempat menyimpan data sementara dalam program disebut...","Variabel","Printer","Kabel","Router"],
+["Pengulangan perintah dalam program disebut...","Looping","Branching","Debugging","Compiling"],
+["Perintah 'if' dalam pemrograman digunakan untuk...","Percabangan (kondisi)","Pengulangan","Mencetak gambar","Mematikan program"],
+["Penipuan online untuk mencuri data pribadi disebut...","Phishing","Browsing","Streaming","Coding"],
+["Kata sandi yang kuat sebaiknya berisi...","Kombinasi huruf, angka, dan simbol","Tanggal lahir saja","Nama sendiri","Angka 123456"],
+["Contoh perangkat lunak (software) adalah...","Microsoft Word","Mouse","Monitor","Flashdisk"],
+["Ekstensi file Microsoft Word adalah...",".docx",".xlsx",".pptx",".jpg"],
+["Aplikasi pengolah angka (spreadsheet) adalah...","Microsoft Excel","Microsoft Word","PowerPoint","Notepad"],
+["Rumus Excel untuk menjumlahkan sel adalah...","=SUM()","=ADD()","=PLUS()","=TOTALIZE"],
+["Tanda yang selalu ada pada alamat email adalah...","@","#","&","%"],
+["Jaringan komputer dalam area lokal disebut...","LAN","WAN","MAN","GAN"],
+["Cikal bakal internet adalah jaringan...","ARPANET","Facebook","Wi-Fi","Bluetooth"],
+["Hak atas karya cipta dilindungi oleh...","Hak Kekayaan Intelektual","Hak Pilih","Hak Asuh","Hak Milik Pribadi saja"],
+["Perangkat lunak berbahaya disebut...","Malware","Hardware","Freeware","Firmware"],
+["Perangkat lunak untuk melindungi komputer dari virus adalah...","Antivirus","Browser","Editor video","Kompresor"],
+["Contoh layanan penyimpanan awan (cloud) adalah...","Google Drive","Notepad","Paint","Calculator"],
+["Contoh mesin pencari (search engine) adalah...","Google","Instagram","Telegram","Spotify"],
+["Berita bohong yang tersebar di internet disebut...","Hoaks","Fakta","Berita resmi","Reportase"],
+["AI adalah singkatan dari...","Artificial Intelligence","Automatic Internet","Advanced Input","Applied Information"],
+["Dekomposisi dalam berpikir komputasional berarti...","Memecah masalah besar menjadi bagian kecil","Menggabungkan semua data","Menghapus data","Menyalin program"],
+["Mengenali kesamaan atau keteraturan dalam masalah disebut...","Pengenalan pola","Dekomposisi","Kompilasi","Enkripsi"],
+["Satuan penyimpanan data terbesar di antara pilihan berikut adalah...","Terabyte (TB)","Gigabyte (GB)","Megabyte (MB)","Kilobyte (KB)"],
+["Pintasan keyboard 'Ctrl + Z' berfungsi untuk...","Membatalkan (undo)","Menyalin","Menempel","Menyimpan"],
+["Pintasan keyboard 'Ctrl + C' berfungsi untuk...","Menyalin","Memotong","Menempel","Mencetak"],
+["Perundungan di dunia maya disebut...","Cyberbullying","Cybercrime","Cyberspace","Cybersport"]
+],
+ipa:[
+["Planet terdekat dengan Matahari adalah...","Merkurius","Venus","Bumi","Mars"],
+["Planet terbesar dalam tata surya adalah...","Jupiter","Saturnus","Neptunus","Bumi"],
+["Rumus kimia air adalah...","H2O","CO2","O2","NaCl"],
+["Gas yang dihirup manusia untuk bernapas adalah...","Oksigen","Karbon dioksida","Nitrogen","Hidrogen"],
+["Gas yang diserap tumbuhan untuk fotosintesis adalah...","Karbon dioksida","Oksigen","Nitrogen","Helium"],
+["Organ yang memompa darah ke seluruh tubuh adalah...","Jantung","Paru-paru","Hati","Ginjal"],
+["Jumlah tulang manusia dewasa adalah...","206","300","150","100"],
+["Satuan gaya dalam SI adalah...","Newton","Joule","Watt","Pascal"],
+["Rumus kecepatan adalah...","Jarak dibagi waktu","Waktu dibagi jarak","Jarak dikali waktu","Massa dikali percepatan"],
+["Perubahan wujud dari cair menjadi gas disebut...","Menguap","Mencair","Membeku","Menyublim"],
+["Perubahan wujud dari padat menjadi cair disebut...","Mencair","Membeku","Mengembun","Menguap"],
+["Proses pembuatan makanan pada tumbuhan terjadi di...","Kloroplas","Mitokondria","Inti sel","Vakuola"],
+["Hewan pemakan tumbuhan disebut...","Herbivora","Karnivora","Omnivora","Insektivora"],
+["Produsen dalam rantai makanan adalah...","Tumbuhan hijau","Singa","Elang","Jamur"],
+["Sumber energi utama bagi Bumi adalah...","Matahari","Bulan","Bintang Polaris","Gunung berapi"],
+["Titik didih air pada tekanan normal adalah...","100°C","0°C","50°C","212°C"],
+["Lambang unsur emas adalah...","Au","Ag","Fe","Cu"],
+["Lambang unsur besi adalah...","Fe","Be","Br","Fr"],
+["Alat untuk mengukur suhu adalah...","Termometer","Barometer","Amperemeter","Higrometer"],
+["Peristiwa terbentuknya pelangi disebut...","Dispersi cahaya","Pemantulan","Difraksi","Polarisasi"],
+["Bunyi tidak dapat merambat pada...","Ruang hampa","Udara","Air","Logam"],
+["Satelit alami Bumi adalah...","Bulan","Matahari","Mars","Venus"],
+["Gerhana Matahari terjadi saat... berada di antara Bumi dan Matahari.","Bulan","Mars","Venus","Jupiter"],
+["Kutub magnet yang sama akan...","Tolak-menolak","Tarik-menarik","Diam","Menyatu"],
+["Satuan kuat arus listrik adalah...","Ampere","Volt","Ohm","Watt"],
+["Satuan tegangan listrik adalah...","Volt","Ampere","Ohm","Joule"],
+["Hukum Newton I disebut juga hukum...","Kelembaman (inersia)","Aksi-reaksi","Gravitasi","Percepatan"],
+["Bagian sel yang mengatur seluruh kegiatan sel adalah...","Inti sel","Dinding sel","Vakuola","Ribosom"],
+["Kekurangan vitamin C dapat menyebabkan...","Sariawan (skorbut)","Rabun senja","Rakitis","Beri-beri"],
+["Vitamin yang membantu pembentukan tulang adalah...","Vitamin D","Vitamin C","Vitamin K","Vitamin B12"],
+["Contoh hewan dengan metamorfosis sempurna adalah...","Kupu-kupu","Belalang","Kecoa","Capung"],
+["Contoh simbiosis mutualisme adalah...","Lebah dan bunga","Benalu dan pohon","Kutu dan anjing","Singa dan rusa"],
+["Contoh bahan bakar fosil adalah...","Batu bara","Kayu bakar","Biogas","Tenaga surya"],
+["Penguapan air melalui daun disebut...","Transpirasi","Respirasi","Fotosintesis","Ekskresi"],
+["Larutan dengan pH kurang dari 7 bersifat...","Asam","Basa","Netral","Garam"],
+["Contoh campuran homogen adalah...","Larutan gula","Air dan minyak","Pasir dan air","Kerikil dan tanah"],
+["Rumus massa jenis adalah...","Massa dibagi volume","Volume dibagi massa","Massa dikali volume","Gaya dibagi luas"],
+["Lapisan atmosfer tempat terjadinya cuaca adalah...","Troposfer","Stratosfer","Mesosfer","Termosfer"],
+["Alat pencatat getaran gempa bumi adalah...","Seismograf","Barometer","Anemometer","Higrometer"],
+["Pencernaan makanan secara kimiawi pertama kali terjadi di...","Mulut","Lambung","Usus halus","Usus besar"]
+],
+ips:[
+["Ibu kota Provinsi Jawa Barat adalah...","Bandung","Bogor","Bekasi","Cirebon"],
+["Benua terluas di dunia adalah...","Asia","Afrika","Eropa","Amerika"],
+["Samudra terluas di dunia adalah...","Pasifik","Atlantik","Hindia","Arktik"],
+["Garis khatulistiwa (ekuator) terletak pada lintang...","0°","23,5°","66,5°","90°"],
+["ASEAN didirikan di kota... pada 8 Agustus 1967.","Bangkok","Jakarta","Manila","Singapura"],
+["Gunung tertinggi di Indonesia adalah...","Puncak Jaya","Gunung Kerinci","Gunung Rinjani","Gunung Semeru"],
+["Danau terbesar di Indonesia adalah...","Danau Toba","Danau Poso","Danau Singkarak","Danau Maninjau"],
+["Sungai terpanjang di Indonesia adalah...","Sungai Kapuas","Sungai Musi","Sungai Bengawan Solo","Sungai Citarum"],
+["Selat yang memisahkan Pulau Jawa dan Sumatra adalah...","Selat Sunda","Selat Malaka","Selat Bali","Selat Makassar"],
+["Kebutuhan primer manusia terdiri atas...","Sandang, pangan, dan papan","Mobil dan rumah mewah","Hiburan dan wisata","Gawai dan pulsa"],
+["Menurut hukum permintaan, jika harga naik maka jumlah barang yang diminta cenderung...","Turun","Naik","Tetap","Tak terbatas"],
+["Fungsi utama uang adalah sebagai...","Alat tukar","Barang antik","Hiasan","Alat pemanas"],
+["Mata uang negara Jepang adalah...","Yen","Won","Yuan","Ringgit"],
+["Mata uang negara Malaysia adalah...","Ringgit","Baht","Peso","Dolar"],
+["Bank sentral Indonesia adalah...","Bank Indonesia","Bank Mandiri","BRI","BNI"],
+["Bapak Koperasi Indonesia adalah...","Mohammad Hatta","Soekarno","Soeharto","Sutan Sjahrir"],
+["Kenaikan harga barang secara umum dan terus-menerus disebut...","Inflasi","Deflasi","Devaluasi","Resesi"],
+["Ciri khas pasar tradisional adalah adanya...","Tawar-menawar","Harga pas","Mesin kasir otomatis","Pendingin ruangan"],
+["Hubungan timbal balik antarindividu atau kelompok disebut...","Interaksi sosial","Mobilitas","Konflik","Urbanisasi"],
+["Tokoh yang dijuluki Bapak Sosiologi adalah...","Auguste Comte","Karl Marx","Adam Smith","Max Weber"],
+["Aturan yang bersumber dari ajaran agama disebut norma...","Agama","Kesusilaan","Kesopanan","Hukum"],
+["Kelompok sosial primer yang paling kecil adalah...","Keluarga","Sekolah","Perusahaan","Partai"],
+["Suku bangsa terbesar di Indonesia adalah suku...","Jawa","Sunda","Batak","Minang"],
+["Rumah adat Gadang berasal dari...","Sumatera Barat","Jawa Tengah","Papua","Bali"],
+["Rumah adat Honai berasal dari...","Papua","Aceh","Kalimantan","Sulawesi"],
+["Tari Saman berasal dari...","Aceh","Bali","Jawa Barat","Maluku"],
+["Tari Kecak berasal dari...","Bali","Jawa Timur","Sumatera Utara","NTT"],
+["Indonesia memiliki iklim...","Tropis","Subtropis","Kutub","Gurun"],
+["Selisih waktu antara WIB dan WITA adalah...","1 jam","2 jam","3 jam","30 menit"],
+["Secara geografis, Indonesia terletak di antara dua benua, yaitu...","Asia dan Australia","Afrika dan Eropa","Amerika dan Asia","Eropa dan Australia"],
+["Contoh sumber daya alam yang dapat diperbarui adalah...","Hutan","Batu bara","Minyak bumi","Gas alam"],
+["Perpindahan penduduk dari desa ke kota disebut...","Urbanisasi","Transmigrasi","Emigrasi","Imigrasi"],
+["Perpindahan penduduk dari daerah padat ke daerah jarang penduduk disebut...","Transmigrasi","Urbanisasi","Evakuasi","Turisme"],
+["Contoh barang bebas adalah...","Udara","Beras","Emas","Pakaian"],
+["Menjual barang ke luar negeri disebut...","Ekspor","Impor","Barter","Konsumsi"],
+["Iuran wajib rakyat kepada negara disebut...","Pajak","Donasi","Zakat","Hibah"],
+["Rencana keuangan tahunan pemerintah pusat disebut...","APBN","APBD","BUMN","PDB"],
+["Julukan 'Pulau Dewata' disematkan pada pulau...","Bali","Lombok","Jawa","Sumatra"],
+["Negara yang berjuluk 'Negeri Singa' adalah...","Singapura","Malaysia","Thailand","Brunei"],
+["Pelaku ekonomi yang menghasilkan barang dan jasa disebut...","Produsen","Konsumen","Distributor","Regulator"]
+],
+mtk:[
+["12 × 8 = ...","96","86","108","88"],
+["144 ÷ 12 = ...","12","14","11","13"],
+["25% dari 200 adalah...","50","25","75","40"],
+["Luas persegi dengan sisi 9 cm adalah...","81 cm²","36 cm²","18 cm²","72 cm²"],
+["Keliling persegi panjang dengan panjang 12 cm dan lebar 5 cm adalah...","34 cm","60 cm","17 cm","29 cm"],
+["Luas segitiga dengan alas 10 cm dan tinggi 6 cm adalah...","30 cm²","60 cm²","16 cm²","36 cm²"],
+["Luas lingkaran dengan jari-jari 7 cm (π = 22/7) adalah...","154 cm²","44 cm²","308 cm²","49 cm²"],
+["Keliling lingkaran dengan diameter 14 cm (π = 22/7) adalah...","44 cm","88 cm","154 cm","22 cm"],
+["FPB dari 12 dan 18 adalah...","6","3","36","9"],
+["KPK dari 4 dan 6 adalah...","12","24","2","10"],
+["3/4 + 1/4 = ...","1","4/8","2/4","1/2"],
+["2/3 + 1/6 = ...","5/6","3/9","3/6","1/2"],
+["Hasil dari -5 + 8 adalah...","3","-3","13","-13"],
+["√169 = ...","13","14","12","17"],
+["5² + 3² = ...","34","16","64","30"],
+["2³ = ...","8","6","9","5"],
+["Nilai x pada 2x + 6 = 14 adalah...","4","10","8","3"],
+["Nilai x pada 3x − 5 = 10 adalah...","5","3","15","4"],
+["Jumlah sudut dalam segitiga adalah...","180°","360°","90°","270°"],
+["Jumlah sudut dalam persegi adalah...","360°","180°","270°","90°"],
+["Volume kubus dengan rusuk 5 cm adalah...","125 cm³","25 cm³","150 cm³","15 cm³"],
+["Volume balok berukuran 6 × 4 × 3 cm adalah...","72 cm³","13 cm³","48 cm³","24 cm³"],
+["Rata-rata dari 6, 8, dan 10 adalah...","8","7","9","24"],
+["Median dari 3, 5, 7, 9, 11 adalah...","7","5","9","35"],
+["Modus dari data 2, 3, 3, 4, 5 adalah...","3","2","4","5"],
+["Bentuk pecahan dari 0,5 adalah...","1/2","1/5","5/100","2/5"],
+["20% dari 150 adalah...","30","20","15","25"],
+["Mobil melaju 60 km/jam selama 3 jam. Jarak tempuhnya adalah...","180 km","63 km","20 km","120 km"],
+["Suku berikutnya dari barisan 2, 4, 8, 16, ... adalah...","32","24","20","18"],
+["Suku berikutnya dari barisan 3, 7, 11, 15, ... adalah...","19","18","21","17"],
+["Hasil dari 15 + 3 × 4 adalah...","27","72","19","60"],
+["(−3) × (−4) = ...","12","−12","7","−7"],
+["Sisi miring segitiga siku-siku dengan sisi 3 cm dan 4 cm adalah...","5 cm","7 cm","6 cm","12 cm"],
+["Sudut siku-siku besarnya...","90°","45°","180°","60°"],
+["Peluang muncul angka 6 pada pelemparan satu dadu adalah...","1/6","1/3","1/2","6/6"],
+["7² = ...","49","14","42","77"],
+["Bilangan prima terkecil adalah...","2","1","3","0"],
+["2,5 jam sama dengan... menit.","150","120","250","180"],
+["Harga barang Rp50.000 didiskon 10%. Harga setelah diskon adalah...","Rp45.000","Rp40.000","Rp49.000","Rp55.000"],
+["Volume tabung dengan r = 7 cm dan t = 10 cm (π = 22/7) adalah...","1.540 cm³","440 cm³","770 cm³","154 cm³"]
+]
+};
+
+/* ===== Daftar mata pelajaran ===== */
+const SUBJECTS = [
+ {id:'pkn',name:'PKN',em:'🇮🇩',a:'#ef4444',b:'#f97316'},
+ {id:'sejarah',name:'Sejarah',em:'🏛️',a:'#a16207',b:'#eab308'},
+ {id:'bindo',name:'Bahasa Indonesia',em:'📖',a:'#e11d48',b:'#fb7185'},
+ {id:'bing',name:'Bahasa Inggris',em:'🔤',a:'#2563eb',b:'#38bdf8'},
+ {id:'islam',name:'Agama Islam',em:'🕌',a:'#059669',b:'#34d399'},
+ {id:'kristen',name:'Agama Kristen',em:'✝️',a:'#7c3aed',b:'#a78bfa'},
+ {id:'pjok',name:'PJOK',em:'⚽',a:'#ea580c',b:'#fbbf24'},
+ {id:'informatika',name:'Informatika',em:'💻',a:'#0891b2',b:'#22d3ee'},
+ {id:'ipa',name:'IPA',em:'🔬',a:'#16a34a',b:'#a3e635'},
+ {id:'ips',name:'IPS',em:'🌏',a:'#0d9488',b:'#2dd4bf'},
+ {id:'mtk',name:'Matematika',em:'➗',a:'#4f46e5',b:'#818cf8'}
+];
+
+const ROUND = 30;      // jumlah soal per permainan
+const TIME = 20;       // detik per soal
+const LEVELUP = 35;    // setiap 35 total jawaban benar -> naik level
+
+/* ===== Util ===== */
+const $ = id => document.getElementById(id);
+const shuffle = a => { for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];} return a; };
+const store = {
+  get(k,d){ try{ const v=localStorage.getItem(k); return v?JSON.parse(v):d; }catch(e){ return d; } },
+  set(k,v){ try{ localStorage.setItem(k,JSON.stringify(v)); }catch(e){} }
+};
+function hexToRgb(h){h=h.replace('#','');return [0,2,4].map(i=>parseInt(h.substr(i,2),16));}
+
+/* =========================================================
+   AUDIO (Web Audio API - suara dibuat langsung, tanpa file)
+   ========================================================= */
+let ctx=null, master, sfxBus, musBus, sfxOn=store.get('sfxOn',true), musOn=store.get('musOn',true), musTimer=null, musStep=0, musMode='menu';
+function initAudio(){
+  if(ctx) { if(ctx.state==='suspended') ctx.resume(); return; }
+  const AC = window.AudioContext||window.webkitAudioContext; if(!AC) return;
+  ctx = new AC();
+  master = ctx.createGain(); master.gain.value=.9;
+  const comp = ctx.createDynamicsCompressor(); master.connect(comp); comp.connect(ctx.destination);
+  sfxBus = ctx.createGain(); sfxBus.gain.value=1; sfxBus.connect(master);
+  musBus = ctx.createGain(); musBus.gain.value=.13; musBus.connect(master);
+}
+function tone(f,t0,d,type='sine',v=.25,bus=sfxBus,slideTo){
+  if(!ctx) return;
+  const o=ctx.createOscillator(), g=ctx.createGain();
+  o.type=type; o.frequency.setValueAtTime(f,t0);
+  if(slideTo) o.frequency.exponentialRampToValueAtTime(slideTo,t0+d);
+  g.gain.setValueAtTime(.0001,t0);
+  g.gain.exponentialRampToValueAtTime(v,t0+.015);
+  g.gain.exponentialRampToValueAtTime(.0001,t0+d);
+  o.connect(g); g.connect(bus); o.start(t0); o.stop(t0+d+.05);
+}
+function noise(t0,d,v=.2,freq=1200){
+  if(!ctx) return;
+  const len=ctx.sampleRate*d, buf=ctx.createBuffer(1,len,ctx.sampleRate), data=buf.getChannelData(0);
+  for(let i=0;i<len;i++) data[i]=(Math.random()*2-1)*(1-i/len);
+  const s=ctx.createBufferSource(); s.buffer=buf;
+  const f=ctx.createBiquadFilter(); f.type='bandpass'; f.frequency.value=freq;
+  const g=ctx.createGain(); g.gain.value=v;
+  s.connect(f); f.connect(g); g.connect(sfxBus); s.start(t0);
+}
+const N = {C4:261.6,D4:293.7,E4:329.6,F4:349.2,G4:392,A4:440,B4:493.9,C5:523.3,D5:587.3,E5:659.3,G5:784,A5:880,C6:1046.5,E6:1318.5};
+function sfx(name){
+  if(!sfxOn) return; initAudio(); if(!ctx) return;
+  const t=ctx.currentTime+.02;
+  switch(name){
+    case 'click': tone(700,t,.08,'triangle',.18,sfxBus,1000); break;
+    case 'hover': tone(900,t,.04,'sine',.06); break;
+    case 'start':
+      [N.C4,N.E4,N.G4,N.C5,N.E5,N.G5].forEach((f,i)=>tone(f,t+i*.07,.18,'square',.12));
+      tone(N.C6,t+.45,.5,'triangle',.18); break;
+    case 'correct':
+      [N.C5,N.E5,N.G5,N.C6].forEach((f,i)=>{tone(f,t+i*.08,.28,'triangle',.28); tone(f*2,t+i*.08,.2,'sine',.08);});
+      tone(N.E6,t+.34,.5,'sine',.16); noise(t+.3,.25,.06,6000); break;
+    case 'wrong':
+      tone(220,t,.35,'sawtooth',.22,sfxBus,90);
+      tone(165,t+.12,.4,'square',.16,sfxBus,70); noise(t,.18,.1,300); break;
+    case 'timeout':
+      [N.G4,N.E4,N.C4].forEach((f,i)=>tone(f,t+i*.14,.3,'sawtooth',.18,sfxBus,f*.7)); break;
+    case 'tick': tone(1200,t,.05,'square',.1); break;
+    case 'tickfast': tone(1700,t,.07,'square',.16); tone(850,t+.08,.05,'square',.08); break;
+    case 'combo':
+      [N.G5,N.A5,N.C6,N.E6].forEach((f,i)=>tone(f,t+i*.05,.15,'sine',.16)); break;
+    case 'win':
+      [[N.C5,0],[N.C5,.15],[N.C5,.3],[N.E5,.45],[N.G5,.7],[N.E5,.95],[N.G5,1.15],[N.C6,1.4]].forEach(([f,d])=>{
+        tone(f,t+d,.35,'square',.14); tone(f/2,t+d,.35,'triangle',.18);});
+      noise(t+1.4,.5,.1,5000); break;
+    case 'lose':
+      [N.E4,N.D4,N.C4].forEach((f,i)=>tone(f,t+i*.28,.5,'triangle',.22,sfxBus,f*.95)); break;
+    case 'level':
+      for(let i=0;i<8;i++) tone(N.C5*Math.pow(2,i*2/12),t+i*.07,.2,'square',.12);
+      tone(N.C6,t+.6,.8,'triangle',.2); break;
+  }
+}
+/* Musik latar: melodi pentatonik + bass + hi-hat, otomatis dijadwalkan */
+const MEL = [N.E5,N.G5,N.A5,N.G5,N.E5,N.D5,N.C5,N.D5, N.E5,N.G5,N.C6,N.A5,N.G5,N.E5,N.D5,N.E5,
+             N.A4,N.C5,N.D5,N.E5,N.D5,N.C5,N.A4,N.G4, N.A4,N.C5,N.E5,N.D5,N.C5,N.D5,N.E5,N.G5];
+const BASS = [130.8,130.8,110,110,87.3,87.3,98,98];
+function musicTick(){
+  if(!ctx||!musOn) return;
+  const t=ctx.currentTime+.05, s=musStep%MEL.length, fast=musMode==='quiz';
+  tone(MEL[s],t,fast?.16:.28,fast?'square':'triangle',fast?.14:.2,musBus);
+  if(s%4===0) tone(BASS[Math.floor(s/4)%BASS.length],t,.5,'sine',.5,musBus);
+  if(fast && s%2===1){ const f=ctx.createBiquadFilter(); noise(t,.04,.05,8000); }
+  if(s%8===4) tone(MEL[s]*2,t,.1,'sine',.07,musBus);
+  musStep++;
+}
+function startMusic(mode){
+  musMode=mode||musMode; if(!musOn) return; initAudio(); if(!ctx) return;
+  stopMusic();
+  const ms = musMode==='quiz'?170:240;
+  musTimer=setInterval(musicTick,ms);
+}
+function stopMusic(){ if(musTimer){clearInterval(musTimer);musTimer=null;} }
+function refreshAudioBtns(){
+  $('btnMusic').classList.toggle('off',!musOn);
+  $('btnSfx').classList.toggle('off',!sfxOn);
+  $('btnSfx').textContent = sfxOn?'🔊':'🔇';
+}
+$('btnMusic').onclick=()=>{ initAudio(); musOn=!musOn; store.set('musOn',musOn); refreshAudioBtns(); musOn?startMusic():stopMusic(); };
+$('btnSfx').onclick=()=>{ initAudio(); sfxOn=!sfxOn; store.set('sfxOn',sfxOn); refreshAudioBtns(); if(sfxOn) sfx('click'); };
+
+/* =========================================================
+   Efek visual: konfeti & latar bintang
+   ========================================================= */
+const fx=$('fx'), fctx=fx.getContext('2d'); let parts=[], fxRun=false;
+function resizeFx(){fx.width=innerWidth;fx.height=innerHeight;}
+addEventListener('resize',resizeFx); resizeFx();
+function burst(x,y,n=60,colors=['#fde047','#f472b6','#22d3ee','#a78bfa','#4ade80','#fb923c']){
+  for(let i=0;i<n;i++){
+    const a=Math.random()*Math.PI*2, sp=3+Math.random()*7;
+    parts.push({x,y,vx:Math.cos(a)*sp,vy:Math.sin(a)*sp-4,g:.22,r:3+Math.random()*5,c:colors[i%colors.length],life:70+Math.random()*50,rot:Math.random()*6,vr:(Math.random()-.5)*.4});
+  }
+  if(!fxRun){fxRun=true;requestAnimationFrame(fxLoop);}
+}
+function rain(){
+  for(let i=0;i<120;i++){
+    parts.push({x:Math.random()*innerWidth,y:-20-Math.random()*300,vx:(Math.random()-.5)*2,vy:2+Math.random()*4,g:.03,r:4+Math.random()*5,
+      c:['#fde047','#f472b6','#22d3ee','#a78bfa','#4ade80','#fb923c'][i%6],life:260,rot:0,vr:.2});
+  }
+  if(!fxRun){fxRun=true;requestAnimationFrame(fxLoop);}
+}
+function fxLoop(){
+  fctx.clearRect(0,0,fx.width,fx.height);
+  parts=parts.filter(p=>p.life>0);
+  parts.forEach(p=>{
+    p.x+=p.vx;p.y+=p.vy;p.vy+=p.g;p.life--;p.rot+=p.vr;
+    fctx.save();fctx.translate(p.x,p.y);fctx.rotate(p.rot);fctx.globalAlpha=Math.min(1,p.life/30);
+    fctx.fillStyle=p.c;fctx.fillRect(-p.r,-p.r/2,p.r*2,p.r);fctx.restore();
+  });
+  if(parts.length) requestAnimationFrame(fxLoop); else {fxRun=false;fctx.clearRect(0,0,fx.width,fx.height);}
+}
+(function mkStars(){
+  const box=$('stars'); for(let i=0;i<40;i++){
+    const s=document.createElement('i'); s.style.left=Math.random()*100+'%'; s.style.top=Math.random()*100+'%';
+    s.style.animationDelay=(Math.random()*4)+'s'; s.style.animationDuration=(3+Math.random()*3)+'s'; box.appendChild(s);
+  }
+})();
+function setTheme(a,b){
+  const r=document.documentElement.style; r.setProperty('--c1',a); r.setProperty('--c2',b);
+}
+function flash(kind){ const f=$('flash'); f.className='flash'; void f.offsetWidth; f.className='flash '+kind; }
+
+/* =========================================================
+   Menu
+   ========================================================= */
+function show(id){
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  $(id).classList.add('active'); window.scrollTo({top:0,behavior:'smooth'});
+}
+function buildMenu(){
+  const g=$('grid'); g.innerHTML='';
+  SUBJECTS.forEach(s=>{
+    const best=store.get('best_'+s.id,0), tot=store.get('total_'+s.id,0), lvl=Math.floor(tot/LEVELUP)+1;
+    const b=document.createElement('button'); b.className='subj';
+    b.style.setProperty('--a',s.a); b.style.setProperty('--b',s.b);
+    b.innerHTML=`<span class="em">${s.em}</span><div class="nm">${s.name}</div>
+      <div class="st"><span>🏅 Lv ${lvl}</span><span>⭐ ${best}</span><span>📝 ${BANK[s.id].length} soal</span></div>`;
+    b.onmouseenter=()=>sfx('hover');
+    b.onclick=()=>startGame(s.id);
+    g.appendChild(b);
+  });
+}
+
+/* =========================================================
+   Permainan
+   ========================================================= */
+let G=null, raf=0;
+function pickRound(id){
+  const bank=BANK[id], all=bank.map((_,i)=>i);
+  let seen=store.get('seen_'+id,[]);
+  let unseen=shuffle(all.filter(i=>!seen.includes(i)));
+  let pick;
+  if(unseen.length>=ROUND){ pick=unseen.slice(0,ROUND); seen=seen.concat(pick); }
+  else{
+    // soal baru habis -> pakai sisa soal baru + sebagian soal lama, siklus dimulai ulang
+    pick=unseen.slice();
+    const rest=shuffle(all.filter(i=>!pick.includes(i))).slice(0,ROUND-pick.length);
+    pick=pick.concat(rest); seen=rest.slice();
+  }
+  store.set('seen_'+id,seen);
+  return shuffle(pick).map(i=>bank[i]);
+}
+function startGame(id){
+  initAudio(); const s=SUBJECTS.find(x=>x.id===id);
+  setTheme(s.a,s.b);
+  G={id,subj:s,qs:pickRound(id),i:0,score:0,right:0,wrong:0,timeout:0,combo:0,maxCombo:0,locked:false};
+  $('qSubj').textContent=s.em+' '+s.name;
+  sfx('start'); startMusic('quiz'); show('sQuiz'); loadQ();
+}
+/* Rekap benar & salah (waktu habis dihitung sebagai salah) */
+function tallyText(bump){
+  const r=G.right, w=G.wrong+G.timeout;
+  const cr=$('qRight'), cw=$('qWrong');
+  cr.textContent='✅ Benar: '+r; cw.textContent='❌ Salah: '+w;
+  if(bump){ const el=bump==='ok'?cr:cw; el.classList.remove('bump'); void el.offsetWidth; el.classList.add('bump'); }
+  return `✅ Benar: ${r} &nbsp;|&nbsp; ❌ Salah: ${w}`;
+}
+function loadQ(){
+  const q=G.qs[G.i]; G.locked=false;
+  $('qno').textContent=`Soal ${G.i+1} / ${G.qs.length}`;
+  $('qtext').textContent=q[0];
+  $('bar').style.width=(G.i/G.qs.length*100)+'%';
+  $('qScore').textContent='⭐ '+G.score;
+  $('qCombo').innerHTML='🔥 x<span class="combo">'+G.combo+'</span>';
+  $('fb').textContent=''; $('fb').className='feedback';
+  tallyText();
+  const opts=shuffle([{t:q[1],c:true},{t:q[2]},{t:q[3]},{t:q[4]}]);
+  G.opts=opts;
+  const box=$('opts'); box.innerHTML='';
+  opts.forEach((o,k)=>{
+    const b=document.createElement('button'); b.className='opt o'+k;
+    b.innerHTML=`<span class="l">${'ABCD'[k]}</span><span>${o.t}</span>`;
+    b.onclick=()=>answer(k);
+    b.onmouseenter=()=>{ if(!G.locked) sfx('hover'); };
+    box.appendChild(b);
+  });
+  startTimer();
+}
+const CIRC=276.46; let lastSec=0;
+function startTimer(){
+  cancelAnimationFrame(raf); G.t0=performance.now(); lastSec=TIME+1;
+  const ring=$('ring'), num=$('tnum'), tm=$('timer');
+  tm.classList.remove('urgent'); ring.style.stroke='var(--good)'; ring.style.strokeDashoffset=0; num.textContent=TIME;
+  const loop=()=>{
+    if(G.locked) return;
+    const left=Math.max(0,TIME-(performance.now()-G.t0)/1000); G.left=left;
+    ring.style.strokeDashoffset=CIRC*(1-left/TIME);
+    const sec=Math.ceil(left); num.textContent=sec;
+    ring.style.stroke = left>10?'#22c55e':left>5?'#f59e0b':'#ef4444';
+    tm.classList.toggle('urgent',left<=5);
+    if(sec!==lastSec){ lastSec=sec; if(sec<=3&&sec>0) sfx('tickfast'); else if(sec<=8&&sec>0) sfx('tick'); }
+    if(left<=0){ timeUp(); return; }
+    raf=requestAnimationFrame(loop);
+  };
+  raf=requestAnimationFrame(loop);
+}
+function revealCorrect(){
+  const btns=[...$('opts').children];
+  G.opts.forEach((o,k)=>{ if(o.c) btns[k].classList.add('right'); });
+  btns.forEach(b=>{ b.disabled=true; });
+}
+function answer(k){
+  if(G.locked) return; G.locked=true; cancelAnimationFrame(raf);
+  const btns=[...$('opts').children], ok=!!G.opts[k].c, fb=$('fb');
+  btns.forEach(b=>b.disabled=true);
+  if(ok){
+    const pts=100+Math.ceil(G.left)*5; G.score+=pts; G.right++; G.combo++; G.maxCombo=Math.max(G.maxCombo,G.combo);
+    btns[k].classList.add('right'); btns.forEach((b,i)=>{ if(i!==k) b.classList.add('dim'); });
+    fb.innerHTML=`✅ Benar! +${pts} poin`+(G.combo>=3?`  🔥 Combo x${G.combo}`:'')+`<div class="tally">${tallyText('ok')}</div>`; fb.className='feedback ok';
+    sfx('correct'); if(G.combo>=3) setTimeout(()=>sfx('combo'),350);
+    flash('ok'); const r=btns[k].getBoundingClientRect(); burst(r.left+r.width/2,r.top+r.height/2,G.combo>=3?90:50);
+  }else{
+    G.wrong++; G.combo=0; btns[k].classList.add('wrong'); revealCorrect();
+    btns.forEach((b,i)=>{ if(i!==k && !G.opts[i].c) b.classList.add('dim'); });
+    fb.innerHTML=`❌ Salah! Jawaban benar disorot hijau.<div class="tally">${tallyText('no')}</div>`; fb.className='feedback no';
+    sfx('wrong'); flash('no');
+  }
+  $('qScore').textContent='⭐ '+G.score; $('qCombo').innerHTML='🔥 x<span class="combo">'+G.combo+'</span>';
+  nextSoon(ok?1400:2000);
+}
+function timeUp(){
+  if(G.locked) return; G.locked=true; cancelAnimationFrame(raf);
+  G.timeout++; G.combo=0; revealCorrect();
+  $('fb').innerHTML=`⏰ Waktu habis! (dihitung salah)<div class="tally">${tallyText('no')}</div>`; $('fb').className='feedback no';
+  sfx('timeout'); flash('no'); $('qCombo').innerHTML='🔥 x<span class="combo">0</span>';
+  nextSoon(2000);
+}
+function nextSoon(ms){
+  const g=G;
+  setTimeout(()=>{ if(!G||G!==g) return; G.i++; if(G.i>=G.qs.length) finish(); else loadQ(); },ms);
+}
+function finish(){
+  $('bar').style.width='100%';
+  const id=G.id, total=store.get('total_'+id,0), before=Math.floor(total/LEVELUP);
+  const newTotal=total+G.right; store.set('total_'+id,newTotal);
+  const after=Math.floor(newTotal/LEVELUP), leveled=after>before;
+  const best=store.get('best_'+id,0), newRecord=G.score>best; if(newRecord) store.set('best_'+id,G.score);
+  const pct=G.right/G.qs.length;
+  const stars=pct>=.9?3:pct>=.7?2:pct>=.4?1:0;
+  let trophy,title,msg;
+  if(pct===1){trophy='👑';title='SEMPURNA! Jawaban benar semua!';msg='Luar biasa! Kamu menguasai semua soal. Soal baru sudah menunggu!';}
+  else if(pct>=.8){trophy='🏆';title='Hebat Sekali!';msg='Nilai kamu sangat bagus. Sedikit lagi sempurna!';}
+  else if(pct>=.6){trophy='🥈';title='Bagus!';msg='Terus berlatih, kamu pasti bisa lebih baik.';}
+  else if(pct>=.4){trophy='🥉';title='Lumayan';msg='Ayo belajar lagi dan coba soal yang baru.';}
+  else {trophy='📚';title='Semangat Belajar!';msg='Jangan menyerah, setiap latihan membuatmu makin pintar.';}
+  $('rTrophy').textContent=trophy; $('rTitle').textContent=title;
+  $('rStars').textContent='⭐'.repeat(stars)+'☆'.repeat(3-stars);
+  $('rScore').textContent=G.score; $('rRight').textContent=G.right+'/'+G.qs.length;
+  $('rWrong').textContent=G.wrong; $('rTime').textContent=G.timeout; $('rBest').textContent=Math.max(best,G.score);
+  $('rMsg').textContent=msg+(G.maxCombo>=3?`  🔥 Combo terbaik: x${G.maxCombo}.`:'')+(newRecord?'  🎉 Rekor baru!':'');
+  $('rLevel').innerHTML = leveled
+    ? `<span class="lvl">🎁 LEVEL UP! Level ${after+1} — total ${newTotal} jawaban benar. Soal baru dibuka!</span>`
+    : `<span class="chip">Progres level: ${newTotal%LEVELUP} / ${LEVELUP} jawaban benar</span>`;
+  show('sResult');
+  if(pct>=.6){ sfx('win'); rain(); } else sfx('lose');
+  if(leveled) setTimeout(()=>{ sfx('level'); burst(innerWidth/2,innerHeight/3,140); },1200);
+  stopMusic(); setTimeout(()=>startMusic('menu'),3500);
+  buildMenu();
+}
+$('btnAgain').onclick=()=>{ sfx('click'); startGame(G.id); };
+$('btnMenu').onclick=()=>{ sfx('click'); backToMenu(); };
+$('btnBack').onclick=()=>{
+  if(confirm('Kembali ke daftar 11 mata pelajaran?\nKuis yang belum selesai ini akan dihentikan dan skornya tidak disimpan.')){
+    sfx('click'); cancelAnimationFrame(raf); G.locked=true; G=null; backToMenu();
+  }
+};
+function backToMenu(){
+  setTheme('#6366f1','#ec4899'); buildMenu(); show('sMenu'); startMusic('menu');
+}
+/* Keyboard: 1-4 atau A-D */
+addEventListener('keydown',e=>{
+  if(!$('sQuiz').classList.contains('active')||!G||G.locked) return;
+  const k={'1':0,'2':1,'3':2,'4':3,'a':0,'b':1,'c':2,'d':3}[e.key.toLowerCase()];
+  if(k!==undefined) answer(k);
+});
+/* Aktifkan audio pada interaksi pertama (aturan browser) */
+let first=true;
+['pointerdown','keydown','touchstart'].forEach(ev=>addEventListener(ev,()=>{
+  if(first){ first=false; initAudio(); if(musOn) startMusic('menu'); }
+},{passive:true}));
+
+refreshAudioBtns(); buildMenu();
+</script>
+</body>
+</html>
